@@ -1,0 +1,148 @@
+TASK 1
+
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
+
+# Step 1: Load the dataset
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df['species'] = iris.target
+
+#step 2: load the first elements
+df.head()
+
+
+# Step 3: Split dataset into train and test sets
+X = df.drop('species', axis=1)
+y = df['species']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Train a Decision Tree Classifier
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Step 5: Make predictions
+y_pred = model.predict(X_test)
+
+# Step 6: Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred, average='macro')  # macro for multi-class
+recall = recall_score(y_test, y_pred, average='macro')
+
+print("Classification Report:\n", classification_report(y_test, y_pred))
+print(f"Accuracy: {accuracy:.2f}")
+print(f"Precision (macro): {precision:.2f}")
+print(f"Recall (macro): {recall:.2f}")
+
+TASK 2
+
+# Step 1: Import libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from sklearn.metrics import classification_report, confusion_matrix
+
+# Step 2: Load MNIST dataset
+(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+# Step 3: Preprocess data
+X_train = X_train.reshape(-1, 28, 28, 1).astype('float32') / 255.0
+X_test = X_test.reshape(-1, 28, 28, 1).astype('float32') / 255.0
+
+# Step 4: Build the CNN model
+model = models.Sequential([
+    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    layers.MaxPooling2D((2, 2)),
+
+    layers.Conv2D(64, (3, 3), activation='relu'),
+    layers.MaxPooling2D((2, 2)),
+
+    layers.Flatten(),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(10, activation='softmax')
+])
+
+# Step 5: Compile the model
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Step 6: Train the model
+history = model.fit(X_train, y_train, epochs=5, validation_split=0.1)
+
+# Step 7: Evaluate the model
+test_loss, test_accuracy = model.evaluate(X_test, y_test)
+print(f"Test accuracy: {test_accuracy:.4f}")
+
+# Step 8: Classification report
+y_pred = model.predict(X_test).argmax(axis=1)
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred))
+
+# Step 9: Visualize predictions on 5 test images
+plt.figure(figsize=(10, 5))
+for i in range(5):
+    index = np.random.randint(0, len(X_test))
+    img = X_test[index].reshape(28, 28)
+    prediction = model.predict(X_test[index].reshape(1, 28, 28, 1)).argmax()
+    
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(img, cmap='gray')
+    plt.title(f"Pred: {prediction}")
+    plt.axis('off')
+plt.tight_layout()
+plt.show()
+
+
+TASK 3
+
+import spacy
+
+
+# Load the spaCy English model
+nlp = spacy.load("en_core_web_sm")
+
+# Sample product reviews
+reviews = [
+    "I love the sound quality of the Sony headphones! Highly recommendable.",
+    "The Apple iPhone 15 has an amazing camera but it is expensive.",
+    "This Samsung Galaxy watch is overpriced and not user-friendly.",
+    "The HP laptop performs well for daily tasks and has a sleek design.",
+    "I had a terrible experience with the Dell monitor."
+]
+
+# Define basic sentiment keywords
+positive_keywords = ["love", "amazing", "recommendable", "well", "sleek"]
+negative_keywords = ["terrible", "poor", "not", "overpriced", "expensive"]
+
+# Process and analyze each review
+for review in reviews:
+    doc = nlp(review)
+    
+    print(f"\n Review: {review}")
+    
+    # Extract named entities
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    if entities:
+        print(" Named Entities:", entities)
+    else:
+        print(" Named Entities: None found")
+    
+    # Rule-based sentiment analysis
+    sentiment = "Neutral"
+    if any(word in review.lower() for word in positive_keywords):
+        sentiment = "Positive"
+    elif any(word in review.lower() for word in negative_keywords):
+        sentiment = "Negative"
+    
+    print(f" Sentiment: {sentiment}")
+
